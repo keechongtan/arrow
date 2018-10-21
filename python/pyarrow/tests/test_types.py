@@ -18,6 +18,7 @@
 from collections import OrderedDict
 
 import numpy as np
+import pandas as pd
 import pickle
 import pytest
 
@@ -442,6 +443,23 @@ def test_field_equality_operators():
     assert f1 != f3
     assert f3 != f4
     assert f1 != 'foo'
+
+
+@pytest.mark.parametrize("data", [
+    list(range(10)),
+    pd.Categorical(list(range(10))),
+    ['foo', 'bar', None, 'baz', 'qux'],
+    np.array([
+        '2007-07-13T01:23:34.123456789', 
+        '2006-01-13T12:34:56.432539784',
+        '2010-08-13T05:46:57.437699912'
+    ], dtype='datetime64[ns]')
+])
+def test_schema_from_pandas(data):
+    df = pd.DataFrame({'a': data})
+    schema = pa.Schema.from_pandas(df)
+    expected = pa.Table.from_pandas(df).schema
+    assert schema == expected
 
 
 def test_field_metadata():
